@@ -45,24 +45,7 @@ for file in uploaded_file:
 
     elif "excel" in file_type or "spreadsheet" in file_type:
         df = pd.read_excel(tmp_path)
-        file_text += df.to_markdown()
-
-        # Button to generate synthetic data by adding 100 more records based on the uploaded Excel data
-        if st.button("Generate Synthetic Data with 100 Additional Records"):
-            additional_data = pd.DataFrame({
-            col: [f"{val}_extra" if df[col].dtype == 'object' else val + 5 for val in df[col].sample(100, replace=True)]
-            for col in df.columns
-            })
-            synthetic_data = pd.concat([df, additional_data], ignore_index=True)
-            synthetic_file_path = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx").name
-            synthetic_data.to_excel(synthetic_file_path, index=False)
-            st.success("Synthetic data with 100 additional records generated successfully!")
-            st.download_button(
-            label="Download Synthetic Excel File",
-            data=open(synthetic_file_path, "rb").read(),
-            file_name="synthetic_data_with_100_records.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        file_text += df.to_markdown()        
     
     elif "image" in file_type:
         # Handle image files if needed
@@ -151,11 +134,36 @@ for file in uploaded_file:
 #             "content": f"I've uploaded a file. Please analyze the following content:\n{file_text}"
 #         })
 #         st.session_state.file_uploaded = True
-
-# Show Chat History
-for msg in st.session_state.messages[1:]:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+# Display uploaded file data in a container with borders and sufficient width
+if file_text:
+    with st.container():
+        st.markdown(
+            f"""
+            <div style="border: 2px solid #4CAF50; padding: 10px; border-radius: 5px; width: 100%;">
+                <h4>Uploaded File Content</h4>
+                <pre style="white-space: pre-wrap; word-wrap: break-word;">{file_text}</pre>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.text_area("File Data", file_text, height=500)
+        
+# Button to generate synthetic data by adding 100 more records based on the uploaded Excel data
+        if st.button("Generate Synthetic Data with 100 Additional Records"):
+            additional_data = pd.DataFrame({
+            col: [f"{val}_extra" if df[col].dtype == 'object' else val + 5 for val in df[col].sample(100, replace=True)]
+            for col in df.columns
+            })
+            synthetic_data = pd.concat([df, additional_data], ignore_index=True)
+            synthetic_file_path = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx").name
+            synthetic_data.to_excel(synthetic_file_path, index=False)
+            st.success("Synthetic data with 100 additional records generated successfully!")
+            st.download_button(
+            label="Download Synthetic Excel File",
+            data=open(synthetic_file_path, "rb").read(),
+            file_name="synthetic_data_with_100_records.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
 # Chat Input
 if prompt := st.chat_input("Ask anything..."):
@@ -179,3 +187,5 @@ if prompt := st.chat_input("Ask anything..."):
             st.markdown(reply)
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
+
+    
