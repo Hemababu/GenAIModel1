@@ -46,6 +46,23 @@ for file in uploaded_file:
     elif "excel" in file_type or "spreadsheet" in file_type:
         df = pd.read_excel(tmp_path)
         file_text += df.to_markdown()
+
+        # Button to generate synthetic data by adding 100 more records based on the uploaded Excel data
+        if st.button("Generate Synthetic Data with 100 Additional Records"):
+            additional_data = pd.DataFrame({
+            col: [f"{val}_extra" if df[col].dtype == 'object' else val + 5 for val in df[col].sample(100, replace=True)]
+            for col in df.columns
+            })
+            synthetic_data = pd.concat([df, additional_data], ignore_index=True)
+            synthetic_file_path = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx").name
+            synthetic_data.to_excel(synthetic_file_path, index=False)
+            st.success("Synthetic data with 100 additional records generated successfully!")
+            st.download_button(
+            label="Download Synthetic Excel File",
+            data=open(synthetic_file_path, "rb").read(),
+            file_name="synthetic_data_with_100_records.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
     
     elif "image" in file_type:
         # Handle image files if needed
@@ -62,7 +79,56 @@ for file in uploaded_file:
             "role": "user",
             "content": f"I've uploaded a file. Please analyze the following content:\n{file_text}"
         })
-        st.session_state.file_uploaded = True
+        st.session_state.file_uploaded = True      
+        # Generate synthetic data related to uploaded Excel sheet
+        # if st.button("Generate Synthetic Data Related to Uploaded Excel Sheet"):
+        #     synthetic_data = pd.DataFrame({
+        #     col: [f"{val}_synthetic" if df[col].dtype == 'object' else val + 10 for val in df[col].head(10)]
+        #     for col in df.columns
+        #     })
+        #     synthetic_file_path = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx").name
+        #     synthetic_data.to_excel(synthetic_file_path, index=False)
+        #     st.success("Synthetic data generated successfully based on uploaded Excel sheet!")
+        #     st.download_button(
+        #     label="Download Synthetic Excel File",
+        #     data=open(synthetic_file_path, "rb").read(),
+        #     file_name="synthetic_data.xlsx",
+        #     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        #     )
+        # Update synthetic data generation to use uploaded Excel columns
+        # uploaded_columns = df.columns.tolist()
+        # if st.button("Generate Synthetic Excel Data Based on Uploaded Columns"):
+        #     synthetic_data = pd.DataFrame({
+        #         col: [f"{col}_{i}" for i in range(1, 1001)] if df[col].dtype == 'object' else [i for i in range(1, 1001)]
+        #         for col in uploaded_columns
+        #     })
+        #     synthetic_file_path = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx").name
+        #     synthetic_data.to_excel(synthetic_file_path, index=False)
+        #     st.success("Synthetic Excel data generated successfully based on uploaded columns!")
+        #     st.download_button(
+        #         label="Download Synthetic Excel File",
+        #         data=open(synthetic_file_path, "rb").read(),
+        #         file_name="synthetic_data.xlsx",
+        #         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        #     )
+        # Generate synthetic Excel data if requested
+        # if st.button("Generate Synthetic Excel Data"):
+        #     synthetic_data = pd.DataFrame({
+        #         "ID": range(1, 1001),
+        #         "Name": [f"Name_{i}" for i in range(1, 1001)],
+        #         "Age": [20 + (i % 30) for i in range(1, 1001)],
+        #         "City": [f"City_{i % 10}" for i in range(1, 1001)],
+        #         "Salary": [30000 + (i % 5000) for i in range(1, 1001)],
+        #     })
+        #     synthetic_file_path = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx").name
+        #     synthetic_data.to_excel(synthetic_file_path, index=False)
+        #     st.success("Synthetic Excel data generated successfully!")
+        #     st.download_button(
+        #         label="Download Synthetic Excel File",
+        #         data=open(synthetic_file_path, "rb").read(),
+        #         file_name="synthetic_data.xlsx",
+        #         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        #     )
 
 # if uploaded_file and not st.session_state.file_uploaded:
 #     file_type = uploaded_file.type
